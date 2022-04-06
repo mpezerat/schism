@@ -207,8 +207,6 @@
                                      ! 3: R-K3 (if ICOMP=0 or 1) - slow; 4: Dynamic Splitting (experimental)
                                      ! 6: Sub-time steps for breaking term integration (subroutine INT_SHALLOW_SOURCETERMS)
 
- ROLMETHOD      = 2                  ! Roller source term integration (1 or 2)
-
  DMETHOD        = 2
                                      ! This switch controls the numerical method in directional space.
                                      ! DMETHOD = 0

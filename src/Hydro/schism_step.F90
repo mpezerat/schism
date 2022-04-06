@@ -5600,8 +5600,10 @@
             do m=1,i34(ie) !wet sides
               isd=elside(m,ie)
               do k=kbs(isd),nvrt-1
-                sum1=sum1+(zs(k+1,isd)-zs(k,isd))*(stokes_hvel_side(1,k+1,isd)+stokes_hvel_side(1,k,isd))/2.d0 !/3.d0
-                sum2=sum2+(zs(k+1,isd)-zs(k,isd))*(stokes_hvel_side(2,k+1,isd)+stokes_hvel_side(2,k,isd))/2.d0 !/3.d0
+                sum1=sum1+(zs(k+1,isd)-zs(k,isd))*(stokes_hvel_side(1,k+1,isd)+stokes_hvel_side(1,k,isd)&
+                     &+ roller_stokes_hvel_side(1,k+1,isd)+roller_stokes_hvel_side(1,k,isd))/2.d0 !/3.d0
+                sum2=sum2+(zs(k+1,isd)-zs(k,isd))*(stokes_hvel_side(2,k+1,isd)+stokes_hvel_side(2,k,isd)&
+                     &+ roller_stokes_hvel_side(2,k+1,isd)+roller_stokes_hvel_side(2,k,isd))/2.d0 !/3.d0
               enddo !k
             enddo !m
             dot3=(dldxy(id,1,ie)*sum1+dldxy(id,2,ie)*sum2)/dble(i34(ie))
@@ -5707,8 +5709,10 @@
                 sum1=0.d0 !integral; x-comp.
                 sum2=0.d0 !integral
                 do k=kbs(isd),nvrt-1 !isd is wet
-                  sum1=sum1+(zs(k+1,isd)-zs(k,isd))*(stokes_hvel_side(1,k+1,isd)+stokes_hvel_side(1,k,isd))/2.d0
-                  sum2=sum2+(zs(k+1,isd)-zs(k,isd))*(stokes_hvel_side(2,k+1,isd)+stokes_hvel_side(2,k,isd))/2.d0
+                  sum1=sum1+(zs(k+1,isd)-zs(k,isd))*(stokes_hvel_side(1,k+1,isd)+stokes_hvel_side(1,k,isd)&
+                       &+ roller_stokes_hvel_side(1,k+1,isd)+roller_stokes_hvel_side(1,k,isd))/2.d0
+                  sum2=sum2+(zs(k+1,isd)-zs(k,isd))*(stokes_hvel_side(2,k+1,isd)+stokes_hvel_side(2,k,isd)&
+                       &+ roller_stokes_hvel_side(2,k+1,isd)+roller_stokes_hvel_side(2,k,isd))/2.d0
                 enddo !k
                 Unbar=sum1*snx(isd)+sum2*sny(isd)
                 tmp0=thetai*dt*distj(isd)*Unbar/2.d0
@@ -6391,7 +6395,8 @@
               !Normal component from vortex formulation
 #ifdef USE_WWM
               if(RADFLAG.eq.'VOR') then
-                vnorm=stokes_hvel_side(1,k,j)*snx(j)+stokes_hvel_side(2,k,j)*sny(j)
+                vnorm=stokes_hvel_side(1,k,j)*snx(j)+stokes_hvel_side(2,k,j)*sny(j)&
+                      &+roller_stokes_hvel_side(1,k,j)*snx(j)+roller_stokes_hvel_side(2,k,j)*sny(j)
               endif !RADFLAG
 #endif               
 

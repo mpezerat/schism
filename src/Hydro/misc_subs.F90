@@ -3951,6 +3951,7 @@
 !     Compute the bottom shear stress due to both wave and current following 
 !     Soulsby (Ch5, Dynamics of Marine Sand, 1997)
 !     Authors: Kévin Martins, Xavier Bertin, Joseph Zhang
+!     March 2022, LRU team : correction of a mistake in tau_bot formula
 !===============================================================================
       subroutine wbl_Soulsby97(Uc_x,Uc_y,z0,sigma,uorb,bthick,Cdp)
 !     Inputs:
@@ -3991,11 +3992,11 @@
       tau_c = Cdp*Uc*Uc                  ! Norm of the the current-induced shear stress (skin friction) [m^2/s/s]
 
       ! Compute wave-induced bottom stress
-      fw    = 1.39_rkind*(sigma*z0/uorb)**0.52_rkind ! Friction factor
+      fw    = min(0.3_rkind,1.39_rkind*(sigma*z0/uorb)**0.52) ! Friction factor
       tau_w = 0.5_rkind*fw*uorb*uorb             ! Norm of the the wave-induced shear stress 
       
       ! Compute the combination of both
-      tau_bot = tau_c*(1._rkind+1.2_rkind*(tau_w/max(epsi,tau_w+tau_c)))
+      tau_bot = tau_c*(1._rkind+1.2_rkind*(tau_w/max(epsi,tau_w+tau_c))**3.2)
       
       if(Uc==0._rkind) then
         !keep original
