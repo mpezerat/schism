@@ -3953,7 +3953,7 @@
 !     Authors: Kévin Martins, Xavier Bertin, Joseph Zhang
 !     March 2022, LRU team : correction of a mistake in tau_bot formula
 !===============================================================================
-      subroutine wbl_Soulsby97(Uc_x,Uc_y,z0,sigma,uorb,bthick,Cdp)
+      subroutine wbl_Soulsby97(Uc_x,Uc_y,z0,sigma,uorb,bthick,Cdp,tau_bot)
 !     Inputs:
 !             (Uc_x,Uc_y) - components of the current velocity at the top of the bottom cell;
 !             z0 - bottom roughness (no waves; m);
@@ -3970,10 +3970,10 @@
       use schism_msgp, only : parallel_abort
       implicit none
       real(rkind), intent(in) :: Uc_x, Uc_y, z0, sigma, uorb, bthick
-      real(rkind), intent(inout) :: Cdp
+      real(rkind), intent(inout) :: Cdp,tau_bot
 
       ! Local
-      real(rkind) :: epsi, Uc, tau_c, tau_w, fw, tau_bot
+      real(rkind) :: epsi, Uc, tau_c, tau_w, fw
 
       ! Some constant
       epsi = 0.000001_rkind

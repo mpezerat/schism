@@ -31,7 +31,7 @@
 #endif
 
 #ifdef USE_GOTM
-      use turbulence, only: do_turbulence, cde, tke1d => tke, eps1d => eps, L1d => L, num1d => num, nuh1d => nuh
+      use turbulence, only: do_turbulence, cde, tke1d => tke, eps1d => eps, L1d => L, num1d => num, nuh1d => nuh, cw
 !      use mtridiagonal, only: init_tridiagonal
 #endif
 
@@ -171,7 +171,7 @@
                      &av_df,vol1,tot_heat,tot_salt,tot_heat_gb, &
                      &tot_salt_gb,dav_mag,tvol,tmass,tpe,tkne,enerf,ener_ob, &
                      &av_dep,vel_m1,vel_m2,xtmp,ytmp,ftmp,tvol12,fluxbnd, &
-                     &fluxchan,fluxchan1,fluxchan2,tot_s,flux_s,ah,ubm,ramp_ss,Cdmax, &
+                     &fluxchan,fluxchan1,fluxchan2,tot_s,flux_s,ah,ubm,aorb,ramp_ss,Cdmax, &
                      &bthick_ori,big_ubstar,big_vbstar,zsurf,tot_bedmass,w1,w2,slr_elev, &
                      &i34inv,av_cff1,av_cff2,av_cff3,av_cff2_chi,av_cff3_chi, &
                      &sav_cfk,sav_cfpsi,sav_h_sd,sav_alpha_sd,sav_nv_sd,sav_c,beta_bar, &
@@ -2169,28 +2169,25 @@
               vmag = sqrt(uu2(kbp(i)+1,i)**2.d0+vv2(kbp(i)+1,i)**2.d0) !current magnitude
 
               ! Wave boundary layer
-              if(iwbl == 1) then ! Grant and Madsen type of WBL
+              if (iwbl == 0) then ! Not accounted for
+                taub_wc(i) = Cdp(i)*(uu2(kbp(i)+1,i)**2+vv2(kbp(i)+1,i)**2)
+              else if(iwbl == 1) then ! Grant and Madsen type of WBL
                 taubx = Cdp(i)*vmag*uu2(kbp(i)+1,i)
                 tauby = Cdp(i)*vmag*vv2(kbp(i)+1,i)
                 wdir = out_wwm(i,18) !wave direction
-                call wbl_GM(taubx,tauby,rough_p(i),ubm,wfr,wdir,z0b,fw,delta_wc,iter,ifl)
+                call wbl_GM(taubx,tauby,rough_p(i),ubm,wfr,wdir,z0b,fw,delta_wbl(i),iter,ifl)
                 !z0b_save(i) = z0b ! (z0b, T. Guérin) 
                 ltmp=ltmp.or.ifl==2
                 iwbl_itmax=max(iwbl_itmax,iter)
 
                 !Impose a max on Cd
                 Cdp(i)=1.d0/(2.5d0*log(max(20.d0,bthick/z0b)))**2.d0
-                !taub_out(i) = Cdp(i)*(uu2(kbp(i)+1,i)**2+vv2(kbp(i)+1,i)**2)
+                taub_wc(i) = Cdp(i)*(uu2(kbp(i)+1,i)**2+vv2(kbp(i)+1,i)**2)
               else if(iwbl == 2) then! Soulsby (1997) type of WBL
-                call wbl_Soulsby97(uu2(kbp(i)+1,i),vv2(kbp(i)+1,i),rough_p(i),wfr,ubm,bthick,Cdp(i))
-!                tmp2=uu2(kbp(i)+1,i)**2+vv2(kbp(i)+1,i)**2
-!                if(tmp2==0) then
-!                  !keep original
-!                else
-!                  Cdp(i)=min(0.05d0,taub/tmp2)
-!                endif
+                call wbl_Soulsby97(uu2(kbp(i)+1,i),vv2(kbp(i)+1,i),rough_p(i),wfr,ubm,bthick,Cdp(i),taub_wc(i))
+                aorb = out_wwm(i,23) ! orbital amp.
+                delta_wbl(i) = 0.09D0 * 30.D0 * rough_p(i) * (aorb / (30.D0 * rough_p(i)))**0.82D0
               endif !iwbl             
-
 #endif /*USE_WWM*/
             endif !bthick
           endif !rough_p
@@ -2388,17 +2385,35 @@
           endif
       
 !         Friction velocity: [\niu*|du/dz|]^0.5 (m/s)
-!BM Notes: [sbr]:m2.s-2
-!          turbinj: partial sink of momentum, fixed at 15% by Feddersen (2012),
-!          but can be adjusted in param.in depending on the wave breaking type.
+!         March 2022, LRU team update :
+!           * 2 options for prescribing the flux of tke
+!           * tested with GOTM v5.2
 #ifdef USE_WWM
-          u_taus=sqrt( turbinj*sqrt(sbr(1,j)**2.d0+sbr(2,j)**2.d0)     &
-              &        + turbinj*sqrt(srol(1,j)**2.d0+srol(2,j)**2.d0) &
-              &        + sqrt(tau(1,j)**2+tau(2,j)**2) )
+!...      At the surface, flux of TKE imposed as a function of breaking wave-induced
+!         energy dissipation ie depth-induced breaking (+roller) + whitecapping:
+!         NB : eps_br = (1-alprol)*eps_w + eps_r (computed in wwm)
+!         turbinj is the % of eps_br (1-25%) injected (set in param.nml)
+!         turbinjds is the % of energy dissipated through wcapping (100%) injected (set in param.nml)
+!...      Option 1 : Feddersen's fashion (e.g. Feddersen and Trowbridge, 2005)
+          u_taus=((1.d0/cw)*turbinj*eps_br(j) + (1.d0/cw)*turbinjds*(-wave_sdstot(j)/rho0))**(1./3.)
+!...      Option 2 : Mellor's fashion (e.g. Newberger and Allen, 2007)
+!          u_taus=sqrt(sqrt(srol(1,j)**2+srol(2,j)**2))
+!          u_taus=sqrt(sqrt(sbr(1,j)**2+sbr(2,j)**2))
+!          u_taus=sqrt((1.d0-ALPROL)*sqrt(sbr(1,j)**2+sbr(2,j)**2) + sqrt(srol(1,j)**2+srol(2,j)**2) + sqrt(sds(1,j)**2+sds(2,j)**2) + sqrt(tau(1,j)**2.d0+tau(2,j)**2.d0))
+
+!...      At the bottom, we impose a dirichlet condition, based on the bottom
+!         shear stressed modified by the interactions between wave and currents (Soulsby, 1995)
+          !Law of the wall
+          u_taub=sqrt(taub_wc(j))
+          !TKE injection (MP Presumably inconsistent)
+          !u_taub=sqrt(taub_wc(j) + sqrt(sbf(1,j)**2+sbf(2,j)**2))!opt1
+          !u_taub=(-(1.d0/cw)*wave_sbftot(j)/rho0 + (1.d0/cw)*sqrt(taub_wc(j))**3)**(1./3.) !opt2
+          !u_taub=((1.d0/cw)*sqrt(taub_wc(j))**3)**(1./3.) !opt3
+          
 #else
           u_taus=sqrt(sqrt(tau(1,j)**2.d0+tau(2,j)**2.d0))
-#endif
           u_taub=sqrt(Cdp(j)*(uu2(kbp(j)+1,j)**2.d0+vv2(kbp(j)+1,j)**2.d0))
+#endif
           nlev=nvrt-kbp(j) !>1
           do k=0,nlev 
             klev=k+kbp(j) !kbp <= klev <= nvrt
@@ -2449,9 +2464,15 @@
 !          h1d(0)=h1d(1)
           toth=eta2(j)+dp(j)
 !         surface and bottom roughness length (m)
-!BM
+
 #ifdef USE_WWM
-          z0s=0.3d0*out_wwm(j,1) ! according to Moghimi et al. (OM, 2013)
+          ! alphaw set in param.nml
+          if (alphaw .gt. 0.d0) then
+            z0s=alphaw * out_wwm(j,1)  ! e.g. Moghimi et al. (OM, 2013)
+          else
+            z0s=abs(alphaw)
+          endif
+            
 #else
           z0s=min(0.1d0,toth/10.d0)
 #endif
@@ -2499,6 +2520,9 @@
             dfv(klev,j)=min(diffmax(j),num1d(k)+diffmin(j)) 
             dfh(klev,j)=min(diffmax(j),nuh1d(k)+diffmin(j))
           enddo !k
+! KM trick      Extrapolating viscosity at the surface from the two knwo values below
+!               This deals with the way GOTM imposes B.C.s at the upper layer and is useful for computing d/dz terms
+          dfv(nlev+kbp(j),j) = dfv(nlev+kbp(j)-1,j)
         enddo !j=1,npa
 !$OMP   end do
 #endif /*USE_GOTM*/

@@ -102,7 +102,7 @@ module schism_glbl
                       &vnh1,vnh2,vnf1,vnf2,rnday,btrack_nudge,hmin_man, &
                       &prmsl_ref,hmin_radstress,eos_a,eos_b,eps1_tvd_imp,eps2_tvd_imp, &
                       &xlsc0,rearth_pole,rearth_eq,hvis_coef0,disch_coef(10),hw_depth,hw_ratio, &
-                      &slr_rate,rho0,shw,gen_wsett,turbinj,h1_bcc,h2_bcc,vclose_surf_frac, &
+                      &slr_rate,rho0,shw,gen_wsett,turbinj,turbinjds,alphaw,h1_bcc,h2_bcc,vclose_surf_frac, &
                       &hmin_airsea_ex,hmin_salt_ex,shapiro0,loadtide_coef
 
   ! Misc. variables shared between routines
