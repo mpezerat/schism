@@ -184,6 +184,14 @@
          DIFRY = zero
        END IF
 !
+! friction source term
+!
+       IF (MESBF .EQ. 3) THEN
+         ALLOCATE(D50_SHOWEX(MNP), stat=istat)
+         IF (istat/=0) CALL WWM_ABORT('wwm_initio, allocate error 18b')
+         D50_SHOWEX = zero
+       END IF
+!
 ! water level, currents and depths ...
 !
        ALLOCATE(WINDXY(MNP,2), PRESSURE(MNP), stat=istat)

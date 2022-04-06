@@ -959,6 +959,8 @@
           
 
          REAL(rkind)             :: FRICC = -0.067
+         ! MP D50 for SHOWEX friction source term
+         REAL(rkind), ALLOCATABLE :: D50_SHOWEX(:)
          REAL(rkind)             :: TRICO = 0.05
          REAL(rkind)             :: TRIRA = 2.5
          REAL(rkind)             :: TRIURS = 0.1
