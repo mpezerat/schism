@@ -745,6 +745,8 @@
          END IF
 
          ! Dissipation by vegetation
+         ! Re-init AC2
+         AC2(:,:,IP) = ACLOC
          IF (MEVEG .GE. 1) THEN
            ! Initialization
            IMATRA = ZERO; IMATDA = ZERO
@@ -779,6 +781,8 @@
          END IF
 
          ! Bottom friction
+         ! Re-init AC2
+         AC2(:,:,IP) = ACLOC
          IF (MESBF .GE. 1) THEN
            ! Initialization
            IMATRA = ZERO; IMATDA = ZERO; SBFTOT_CUM = ZERO

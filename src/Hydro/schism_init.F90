@@ -430,7 +430,7 @@
       !just add the output statements in _step and flags in param.nml (same
       !order). Flags for modules other than hydro are only used inside USE_*
       if(iorder==0) then
-        allocate(iof_hydro(40),iof_wwm(30),iof_gen(max(1,ntracer_gen)),iof_age(max(1,ntracer_age)),level_age(ntracer_age/2), &
+        allocate(iof_hydro(40),iof_wwm(40),iof_gen(max(1,ntracer_gen)),iof_age(max(1,ntracer_age)),level_age(ntracer_age/2), &
      &iof_sed(3*sed_class+20),iof_eco(max(1,eco_class)),iof_icm(44),iof_cos(20),iof_fib(5), &
      &iof_sed2d(14),iof_ice(10),iof_ana(20),iof_marsh(2),iof_dvd(max(1,ntrs(12))), &
       !dim of srqst7 increased to account for 2D elem/side etc
@@ -1475,7 +1475,7 @@
         if(istat/=0) call parallel_abort('MAIN: WWM allocation failure')
       endif !iorder
       out_wwm=0.d0; out_wwm_windpar=0.d0; out_wwm_rol=0.d0; eps_w=0.d0; eps_r=0.d0; eps_br=0.d0
-      jpress=0.d0; sbr=0.d0; sbf=0.d0; srol=0.d0; taub_wc=0.d0
+      jpress=0.d0; sbr=0.d0; sbf=0.d0; srol=0.d0; sds=0.d0; taub_wc=0.d0
       stokes_hvel=0.d0; stokes_wvel=0.d0; stokes_hvel_side=0.d0; stokes_wvel_side=0.d0
       roller_stokes_hvel=0.d0; roller_stokes_hvel_side=0.d0; delta_wbl=0.D0
       wave_sbrtot=0.0D0; wave_sbftot=0.0D0; wave_sintot=0.0D0; wave_sdstot=0.0D0
@@ -6831,7 +6831,7 @@
           call mpi_send(iths,1,itype,nproc_schism-i,110,comm_schism,ierr)
           call mpi_send(ntime,1,itype,nproc_schism-i,111,comm_schism,ierr)
           call mpi_send(iof_hydro,40,itype,nproc_schism-i,112,comm_schism,ierr)
-          call mpi_send(iof_wwm,30,itype,nproc_schism-i,113,comm_schism,ierr)
+          call mpi_send(iof_wwm,40,itype,nproc_schism-i,113,comm_schism,ierr)
           !Make sure char len is 20 in scribe_io also!
           call mpi_send(out_name,counter_out_name*20,MPI_CHAR,nproc_schism-i,114,comm_schism,ierr)
           call mpi_send(ncount_2delem,1,itype,nproc_schism-i,115,comm_schism,ierr)

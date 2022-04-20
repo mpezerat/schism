@@ -3864,7 +3864,7 @@
       !integer MadsenFlag  !0 - Madsen2004, 1 - Madsen79
       !Local
       real(rkind) :: rkappa,rkn,taub,phi_c,phi_cw,rmu,rmu2,c_mu,tmp,tau_wm, &
-                     &cm_ubm,aa
+                     &cm_ubm,aa,wdir_math
 
 !     sanity check
       if(z0<0._rkind.or.ubm<0._rkind.or.wfr<0._rkind) then
@@ -3888,7 +3888,14 @@
 !      Ubm = Wheight*wr/Sinh(Wnum*Depth) !orbital vel.
       taub=sqrt(taubx*taubx+tauby*tauby)
       phi_c=atan2(tauby,taubx) !current dir
-      phi_cw=phi_c+wdir/180._rkind*pi+pi/2._rkind !convert to math convention
+      !convert to math convention
+      wdir_math = 180._rkind + 90._rkind - wdir
+      if (wdir_math .GE. 360.0_rkind) then
+        wdir_math = MOD (wdir_math, 360.0_rkind)
+      else if (wdir_math .LT. 0.) then
+        wdir_math = MOD (wdir_math, 360.0_rkind) + 360.0_rkind
+      endif
+      phi_cw=phi_c+wdir_math/180._rkind*pi
 
       rmu=0._rkind !init. guess
       c_mu=1._rkind

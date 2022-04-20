@@ -390,7 +390,7 @@
             
             ! Saving wave forces
             WWAVE_FORCE(1,k,IS) = WWAVE_FORCE(1,k,IS) + VF_x_loc + STCOR_x_loc - dJ_dx_loc
-            WWAVE_FORCE(2,k,IS) = WWAVE_FORCE(2,k,IS) + VF_x_loc + STCOR_x_loc - dJ_dx_loc
+            WWAVE_FORCE(2,k,IS) = WWAVE_FORCE(2,k,IS) + VF_y_loc + STCOR_y_loc - dJ_dy_loc
             
           END DO
         END DO !ns
@@ -418,7 +418,7 @@
         REAL(rkind) :: eta_tmp, tmp0, htot, sum_2D, sum_3D
         REAL(rkind) :: Fdb_x_loc, Fdb_y_loc, Fds_x_loc, Fds_y_loc
         REAL(rkind) :: swild_2D(NVRT), swild_3D(NVRT)
-
+        
         ! Compute sink of momentum due to wave breaking 
         DO IS = 1, ns
         
@@ -432,6 +432,9 @@
           htot = max(h0,dps(IS)+eta_tmp)
 
           IF(kbs(IS)+1 == NVRT) THEN !2D
+          
+            Fdb_x_loc = 0.D0 ; Fdb_y_loc = 0.D0
+            Fds_x_loc = 0.D0 ; Fds_y_loc = 0.D0
 
             ! N.B. average between the two adjacent nodes
             
@@ -484,6 +487,10 @@
             END DO !NVRT-1
 
             DO k = kbs(IS), NVRT
+            
+              Fdb_x_loc = 0.D0 ; Fdb_y_loc = 0.D0
+              Fds_x_loc = 0.D0 ; Fds_y_loc = 0.D0
+              
               ! Depth-induced breaking and roller contribution
               IF (IROLLER == 1) THEN
                 Fdb_x_loc = -swild_3D(k)*((1.D0-ALPROL)*(SBR(1,n1) + SBR(1,n2)) + SROL(1,n1) + SROL(1,n2))/2.D0/sum_3D 
@@ -500,7 +507,7 @@
               WWAVE_FORCE(2,k,IS) = WWAVE_FORCE(2,k,IS) + Fdb_y_loc + Fds_y_loc
             END DO
           END IF !2D/3D
-
+          
           !! Smoothing wave forces near the shoreline
           !! With this profile, F < 10% of computed F at h < DMIN, and F > 95% of computed F at h > 2.25*DMIN
           !!IF (htot < 8.*DMIN) WWAVE_FORCE(:,:,IS) = WWAVE_FORCE(:,:,IS)*tanh((0.5D0*htot/DMIN)**8.D0)

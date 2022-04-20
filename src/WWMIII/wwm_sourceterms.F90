@@ -109,6 +109,7 @@
          DSSNL4      = zero
          SSBR        = zero
          SSBF        = zero
+         SSDS        = zero
          DSSBF       = zero
          SSVEG       = zero
          DSSVEG      = zero
@@ -305,7 +306,7 @@
          call WAV_MY_WTIME(TIME4)
 #endif 
          IF ((ISELECT.EQ.3 .OR. ISELECT.EQ.10 .OR. ISELECT.EQ.20) .AND. .NOT. LRECALC) THEN
-
+           
            IMATRAT = IMATRA
 
            IF (IOBP(IP) .EQ. 0 .OR. IOBP(IP) .EQ. 4) THEN
@@ -356,7 +357,7 @@
              ELSE IF (MESDS == 5) THEN
                CALL SDS_CYCLE3 ( IP, KMWAM, SME10, ETOT, ACLOC, IMATRA, IMATDA, SSDS ) 
              END IF
-             IF ( RADFLAG .EQ. 'VOR' ) THEN
+             IF ( MESDS/=0 .AND. RADFLAG .EQ. 'VOR' ) THEN
                  CALL COMPUTE_SDS(IP,SSDS)
              END IF
            END IF

@@ -6321,7 +6321,7 @@
      &(2.d0*wwave_force(1:2,k,j)+wwave_force(1:2,k-1,j))
 #endif /*USE_WWM*/
         enddo !k=kbs(j)+1,nvrt
-
+        
         call tridag(nvrt,2,ndim,2,alow,bdia,cupp,rrhs,soln,gam)
         do k=kbs(j)+1,nvrt
           kin=k-kbs(j)
@@ -8442,7 +8442,7 @@
         call writeout_nc(id_out_var(2),'wetdry_elem',4,1,nea,dble(idry_e))
         call writeout_nc(id_out_var(3),'wetdry_side',7,1,nsa,dble(idry_s))
         !zcor MUST be 1st 3D var output for combine scripts to work!
-        if(iof_hydro(25)==1) call writeout_nc(id_out_var(4),'zcor',2,nvrt,npa,znl(:,:))
+        call writeout_nc(id_out_var(4),'zcor',2,nvrt,npa,znl(:,:))
         !if(iof_hydro(1)==1) call writeout_nc(id_out_var(5),'elev',1,1,npa,eta2)
         if(iof_hydro(1)==1) call writeout_nc(id_out_var(5),'elev',1,1,np,swild(1:np))
         if(iof_hydro(2)==1) call writeout_nc(id_out_var(6),'air_pressure',1,1,npa,pr)
@@ -8468,12 +8468,12 @@
         if(iof_hydro(22)==1) call writeout_nc(id_out_var(26),'viscosity',2,nvrt,npa,dfv)
         if(iof_hydro(23)==1) call writeout_nc(id_out_var(27),'TKE',2,nvrt,npa,q2)
         if(iof_hydro(24)==1) call writeout_nc(id_out_var(28),'mixing_length',2,nvrt,npa,xl)
-        if(iof_hydro(26)==1) call writeout_nc(id_out_var(29),'hvel',2,nvrt,npa,uu2,vv2)
-        if(iof_hydro(27)==1) call writeout_nc(id_out_var(30),'hvel_side',8,nvrt,nsa,su2,sv2)
-        if(iof_hydro(28)==1) call writeout_nc(id_out_var(31),'wvel_elem',5,nvrt,nea,we)
-        if(iof_hydro(29)==1) call writeout_nc(id_out_var(32),'temp_elem',6,nvrt,nea,tr_el(1,:,:))
-        if(iof_hydro(30)==1) call writeout_nc(id_out_var(33),'salt_elem',6,nvrt,nea,tr_el(2,:,:))
-        if(iof_hydro(31)==1) call writeout_nc(id_out_var(34), &
+        if(iof_hydro(25)==1) call writeout_nc(id_out_var(29),'hvel',2,nvrt,npa,uu2,vv2)
+        if(iof_hydro(26)==1) call writeout_nc(id_out_var(30),'hvel_side',8,nvrt,nsa,su2,sv2)
+        if(iof_hydro(27)==1) call writeout_nc(id_out_var(31),'wvel_elem',5,nvrt,nea,we)
+        if(iof_hydro(28)==1) call writeout_nc(id_out_var(32),'temp_elem',6,nvrt,nea,tr_el(1,:,:))
+        if(iof_hydro(29)==1) call writeout_nc(id_out_var(33),'salt_elem',6,nvrt,nea,tr_el(2,:,:))
+        if(iof_hydro(30)==1) call writeout_nc(id_out_var(34), &
      &'pressure_gradient',7,1,nsa,bpgr(:,1),bpgr(:,2))
         noutput=30 !total # of outputs so far (for dim of id_out_var)
 
@@ -8728,10 +8728,59 @@
         if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
      &'WWM_energy_dir',1,1,npa,dble(out_wwm(:,8)),dble(out_wwm(:,7)))
 
+        ! Wave forces
         noutput=noutput+1
         icount=icount+1
         if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
      &'wave_force',8,nvrt,nsa,wwave_force(1,:,:),wwave_force(2,:,:))
+     
+        ! Horizontal Stokes velocity at nodes
+        noutput=noutput+1
+        icount=icount+1
+        if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
+     &'stokes_hvel',2,nvrt,npa,stokes_hvel(1,:,:),stokes_hvel(2,:,:))
+     
+        ! Vertical Stokes velocity at sides
+        noutput=noutput+1
+        icount=icount+1
+        if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
+     &'stokes_wvel',8,nvrt,nsa,dble(stokes_wvel_side(:,:)))
+     
+        ! Horizontal Stokes velocity at nodes for the surface roller
+        noutput=noutput+1
+        icount=icount+1
+        if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
+     &'roller_stokes_hvel',2,nvrt,npa,roller_stokes_hvel(1,:,:),roller_stokes_hvel(2,:,:))
+     
+        ! Roller energy dissipation rate (Drol = rho * eps_r, unit [W/m²])
+        noutput=noutput+1
+        icount=icount+1
+        if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
+     &'Drol',1,1,npa,dble(rho0*eps_r(:)))
+     
+        ! Total wave energy dissipation rate by depth-induced breaking [W/m²]
+        noutput=noutput+1
+        icount=icount+1
+        if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
+     &'wave_sbrtot',1,1,npa,dble(wave_sbrtot(:)))
+     
+        ! Total wave energy dissipation rate by bottom friction [W/m²]
+        noutput=noutput+1
+        icount=icount+1
+        if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
+     &'wave_sbftot',1,1,npa,dble(wave_sbftot(:)))
+     
+        ! Total wave energy dissipation rate by whitecapping [W/m²]
+        noutput=noutput+1
+        icount=icount+1
+        if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
+     &'wave_sdstot',1,1,npa,dble(wave_sdstot(:)))
+     
+        ! Total wave energy input rate from atmospheric forcing [W/m²]
+        noutput=noutput+1
+        icount=icount+1
+        if(iof_wwm(icount)==1) call writeout_nc(id_out_var(noutput+4), &
+     &'wave_sintot',1,1,npa,dble(wave_sintot(:)))
 #endif
 
 #ifdef USE_MARSH
